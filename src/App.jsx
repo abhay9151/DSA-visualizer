@@ -1,19 +1,29 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import './App.css'
-import Content from './frontend/component/Content'
-import Header from './frontend/component/Header'
-import { ThemeProvider } from './frontend/component/ThemeProvider'
-import { AuthProvider, useAuth } from './frontend/component/AuthContext'
-import Algo_page from './frontend/component/Algo_page'
-import Favour from './frontend/component/Favour'
-import DSATracker from './frontend/component/DSATracker'
-import AuthPage from './frontend/component/AuthPage'
-import AboutPage from './frontend/component/AboutPage'
+import Content from './component/Content'
+import Header from './component/Header'
+import { AuthProvider, useAuth } from './component/AuthContext'
+import Algo_page from './component/Algo_page'
+import Favour from './component/Favour'
+import DSATracker from './component/DSATracker'
+import AuthPage from './component/AuthPage'
+import AboutPage from './component/AboutPage'
+import { ThemeProvider } from './component/ThemeProvider'
 import { useState } from 'react'
-import Chatbot from './frontend/AiChatbot/Chatbot'
+import Chatbot from './AiChatbot/Chatbot'
+
 
 function Protected({ children }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0d1117] text-white">
+        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   return user ? children : <Navigate to="/login" replace />;
 }
 
@@ -30,7 +40,6 @@ function AppInner() {
       <Routes>
         <Route path="/login"  element={<AuthPage />} />
         <Route path="/signup" element={<AuthPage />} />
-        <Route path="/about" element={<AboutPage />} />
         <Route path="/" element={<Protected><Content favour={favour} toggleFavour={toggleFavour} /></Protected>} />
         <Route path="/favour" element={<Protected><Favour favour={favour} toggleFavour={toggleFavour} /></Protected>} />
         <Route path="/algo/:id" element={<Protected><Algo_page /></Protected>} />

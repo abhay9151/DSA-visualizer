@@ -1,15 +1,25 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import "./AuthPage.css";
 
 export default function AuthPage() {
-  const [mode, setMode] = useState("login");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isSignupRoute = location.pathname === "/signup";
+  const [activeTab, setActiveTab] = useState(null);
+  const mode = activeTab ?? (isSignupRoute ? "signup" : "login");
+
   const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const { login, signup } = useAuth();
-  const navigate = useNavigate();
+  const { user, login, signup, guestLogin } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/", { replace: true });
+    }
+  }, [user, navigate]);
 
   function set(key, val) {
     setForm(f => ({ ...f, [key]: val }));
@@ -33,18 +43,19 @@ export default function AuthPage() {
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setLoading(true);
     await new Promise(r => setTimeout(r, 500));
-    const result = mode === "login"
+    const result =await( mode === "login"
       ? login(form.email, form.password)
-      : signup(form.name, form.email, form.password);
+      : signup(form.name, form.email, form.password));
     setLoading(false);
     if (result.ok) navigate("/");
     else setErrors({ general: result.error });
   }
 
   function switchMode(m) {
-    setMode(m);
+    setActiveTab(m);
     setForm({ name: "", email: "", password: "", confirm: "" });
     setErrors({});
+    navigate(m === "signup" ? "/signup" : "/login", { replace: true });
   }
 
   const isLogin = mode === "login";
@@ -131,6 +142,42 @@ export default function AuthPage() {
             className="auth-submit-btn"
           >
             {loading ? "Please wait..." : isLogin ? "Log In →" : "Create Account →"}
+          </button>
+
+          {/* Guest bypass divider */}
+          <div style={{ display: "flex", alignItems: "center", margin: "14px 0 10px", opacity: 0.4 }}>
+            <div style={{ flex: 1, height: "1px", background: "currentColor" }} />
+            <span style={{ padding: "0 10px", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.5px" }}>or</span>
+            <div style={{ flex: 1, height: "1px", background: "currentColor" }} />
+          </div>
+
+          {/* Guest access button */}
+          <button
+            type="button"
+            onClick={() => {
+              guestLogin();
+              navigate("/");
+            }}
+            style={{
+              width: "100%",
+              padding: "10px 14px",
+              borderRadius: "8px",
+              border: "1px solid rgba(99, 102, 241, 0.4)",
+              background: "rgba(99, 102, 241, 0.12)",
+              color: "inherit",
+              fontWeight: 600,
+              fontSize: "13px",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px"
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = "rgba(99, 102, 241, 0.24)"}
+            onMouseLeave={e => e.currentTarget.style.background = "rgba(99, 102, 241, 0.12)"}
+          >
+            <span>🚀 Explore as Guest (Instant Preview)</span>
           </button>
 
         </form>
